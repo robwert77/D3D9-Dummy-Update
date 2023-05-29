@@ -2,6 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <string.h>
+#include <math.h>
 
 #pragma warning(disable : 4996)
 // data
@@ -10,31 +11,79 @@ BYTE EndSceneBytes[7]{ 0 };
 tEndScene oEndScene = nullptr;
 extern LPDIRECT3DDEVICE9 pDevice = nullptr;
 Hack* hack;
+#include <windows.h>
 
-// hook function
 void APIENTRY hkEndScene(LPDIRECT3DDEVICE9 o_pDevice) {
 
 	if (!pDevice)
 		pDevice = o_pDevice;
 
-	DrawText("WOW ESP", windowWidth / 2, windowHeight - 20, D3DCOLOR_ARGB(255, 255, 255, 255));
+	static bool imguiInitialized = false;
+	if (!imguiInitialized) {
+		ImGui::CreateContext();
+		ImGuiIO& io = ImGui::GetIO();
+		ImGui_ImplWin32_Init(GetProcessWindow());
+		ImGui_ImplDX9_Init(pDevice);
+		ImGui::StyleColorsDark();
+		imguiInitialized = true;
+	}
+
+	ImGuiIO& io = ImGui::GetIO();
+	POINT mousePos;
+	GetCursorPos(&mousePos);
+	io.MousePos = ImVec2((float)mousePos.x, (float)mousePos.y);
+	io.MouseDown[0] = GetAsyncKeyState(VK_LBUTTON);
+	io.MouseDown[1] = GetAsyncKeyState(VK_RBUTTON);
+	ImGui_ImplDX9_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
 
 	int menuOffX = windowWidth / 2;
 	int menuOffY = 50;
 	D3DCOLOR enabled = D3DCOLOR_ARGB(255, 0, 255, 0);
 	D3DCOLOR disabled = D3DCOLOR_ARGB(255, 255, 0, 0);
 
-	if (!hack->settings.showMenu) {
-		DrawText("Show Menu (INS)", menuOffX, menuOffY, D3DCOLOR_ARGB(255, 255, 255, 255));
+	if (hack->settings.showMenu) {
+		// Set up ImGui menu with custom colors and no resize or collapse
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.1f, 0.1f, 0.1f, 0.9f)); // Dark grey background
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.8f, 0.2f, 0.2f, 0.3f)); // Red frames
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f)); // White text
+
+		ImGui::Begin("Hack Menu", &hack->settings.showMenu, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+
+		ImGui::SetWindowPos(ImVec2(menuOffX, menuOffY), ImGuiCond_Once);
+		ImGui::SetWindowSize(ImVec2(200, 300), ImGuiCond_Once);
+
+		// ESP options
+		ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "ESP Options"); // Green text
+		ImGui::Checkbox("ESP Box", &hack->settings.bEspBox2D);
+		ImGui::Checkbox("ESP Line", &hack->settings.bLine);
+		ImGui::Checkbox("ESP Text", &hack->settings.bText);
+
+		// Aim and Fire control options
+		ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Aim & Fire Control Options"); // Green text
+		ImGui::Checkbox("Aimbot", &hack->settings.bAimbot);
+		ImGui::Checkbox("Recoil", &hack->settings.bRecoil);
+		ImGui::Checkbox("PowerShoot", &hack->settings.bPowerShoot);
+
+		// Other cheat options
+		ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Other Cheat Options"); // Green text
+		ImGui::Checkbox("Cheats", &hack->settings.bCheats);
+		ImGui::Checkbox("SpeedHack", &hack->settings.bSpeedHack);
+
+		ImGui::End();
+		ImGui::PopStyleColor(3); // Remember to pop each style color you pushed to reset them!
 	}
-	else {
-		DrawText("Snaplines (F1)", menuOffX, menuOffY + 1 * 12, hack->settings.bLine ? enabled : disabled);
-		DrawText("2D Box (F2)", menuOffX, menuOffY + 2 * 12, hack->settings.bEspBox2D ? enabled : disabled);
-		DrawText("Health Text (F3)", menuOffX, menuOffY + 3 * 12, hack->settings.bText ? enabled : disabled);
-		DrawText("Crosshair (F4)", menuOffX, menuOffY + 4 * 12, hack->settings.showCross ? enabled : disabled);
-		DrawText("Cheats (F5)", menuOffX, menuOffY + 5 * 12, hack->settings.bCheats ? enabled : disabled);
-		DrawText("Speed Hack (F6)", menuOffX, menuOffY + 6 * 12, hack->settings.bSpeedHack ? enabled : disabled);
-		DrawText("Hide Menu (INS)", menuOffX, menuOffY + 7 * 12, D3DCOLOR_ARGB(255, 255, 255, 255));
+
+
+	if (hack->settings.bRecoil)
+	{
+		hack->Recoil();
+	}
+
+	if (hack->settings.bPowerShoot)
+	{
+		hack->PowerShoot();
 	}
 
 	if (hack->settings.bCheats)
@@ -53,6 +102,10 @@ void APIENTRY hkEndScene(LPDIRECT3DDEVICE9 o_pDevice) {
 		hack->Cheats.speedAdr = 0x021D77B8;
 		int* speed = (int*)hack->Cheats.speedAdr;
 		*speed = 190;
+	}
+
+	if (hack->settings.bAimbot) {
+		hack->aimbot();
 	}
 
 	for (int i = 0; i < 32; i++) {
@@ -77,11 +130,13 @@ void APIENTRY hkEndScene(LPDIRECT3DDEVICE9 o_pDevice) {
 			if(hack->settings.bLine)
 				DrawLine(entPos2D.x, entPos2D.y + 15, windowWidth / 2, windowHeight, 2, color);
 		}
+
 		if (hack->WorldToScreen(headPos3d, entHead2D)) {
 			if (hack->settings.bEspBox2D)
 			{
 				DrawEspBox2D(entPos2D, entHead2D, 2, color);
-
+				// aimbot the closest entity to my crosshai
+	
 				int height = ABS(entPos2D.y - entHead2D.y);
 				int dx = entPos2D.x - entHead2D.x;
 
@@ -116,6 +171,9 @@ void APIENTRY hkEndScene(LPDIRECT3DDEVICE9 o_pDevice) {
 		DrawFilledRect(windowWidth / 2 - 2, windowHeight / 2 - 2, 4, 4, D3DCOLOR_ARGB(255, 255, 255, 255));
 	}
 
+	ImGui::Render();
+	ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
+
 	// call og function
 	oEndScene(pDevice);
 }
@@ -139,6 +197,10 @@ DWORD WINAPI HackThread(HMODULE hModule) {
 
 	// unhook
 	Patch((BYTE*)d3d9Device[42], EndSceneBytes, 7);
+
+	ImGui_ImplDX9_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 
 	// uninject
 	FreeLibraryAndExitThread(hModule, 0);
