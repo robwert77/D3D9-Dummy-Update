@@ -15,33 +15,6 @@ void Hack::CheckButtons() {
 	if (GetAsyncKeyState(Buttons.showMenu) & 1) {
 		settings.showMenu = !settings.showMenu;
 	}
-	if (GetAsyncKeyState(Buttons.bText) & 1) {
-		settings.bText = !settings.bText;
-	}
-	if (GetAsyncKeyState(Buttons.bLine) & 1) {
-		settings.bLine = !settings.bLine;
-	}
-	if (GetAsyncKeyState(Buttons.bEspBox2D) & 1) {
-		settings.bEspBox2D = !settings.bEspBox2D;
-	}
-	if (GetAsyncKeyState(Buttons.showCross) & 1) {
-		settings.showCross = !settings.showCross;
-	}
-	if (GetAsyncKeyState(Buttons.bCheats) & 1) {
-		settings.bCheats = !settings.bCheats;
-	}
-	if (GetAsyncKeyState(Buttons.bSpeedHack) & 1) {
-		settings.bSpeedHack = !settings.bSpeedHack;
-	}
-	if (GetAsyncKeyState(Buttons.bPowerShoot) & 1) {
-		settings.bPowerShoot = !settings.bPowerShoot;
-	}
-	if (GetAsyncKeyState(Buttons.bRecoil) & 1) {
-		settings.bRecoil = !settings.bRecoil;
-	}
-	if (GetAsyncKeyState(Buttons.bAimbot) & 1) {
-		settings.bAimbot = !settings.bAimbot;
-	}
 }
 
 void Hack::cheatEn() {
@@ -203,4 +176,3 @@ bool Hack::WorldToScreen(Vec3 pos, Vec2& screen) {
 	screen.y = -(windowHeight / 2 * NDC.y) + (NDC.y + windowHeight / 2);
 	return true;
 }
-

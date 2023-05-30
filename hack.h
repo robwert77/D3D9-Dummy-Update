@@ -114,6 +114,8 @@ public:
 		bool bPowerShoot = false;
 		bool bRecoil = false;
 		bool bAimbot = false;
+		bool bHealthText = false;
+		bool bDistanceText = false;
 	}settings;
 
 	struct Cheats
@@ -130,15 +132,6 @@ public:
 
 	struct Buttons
 	{
-		DWORD bEspBox2D = VK_F2;
-		DWORD bText = VK_F3;
-		DWORD bLine = VK_F1;
 		DWORD showMenu = VK_INSERT;
-		DWORD showCross = VK_F4;
-		DWORD bSpeedHack = VK_F6;
-		DWORD bAimbot = VK_F9;
-		DWORD bCheats = VK_F5;
-		DWORD bRecoil = VK_F8;
-		DWORD bPowerShoot = VK_F7;
 	}Buttons;
 };

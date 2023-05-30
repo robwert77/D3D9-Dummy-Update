@@ -58,7 +58,8 @@ void APIENTRY hkEndScene(LPDIRECT3DDEVICE9 o_pDevice) {
 		ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "ESP Options"); // Green text
 		ImGui::Checkbox("ESP Box", &hack->settings.bEspBox2D);
 		ImGui::Checkbox("ESP Line", &hack->settings.bLine);
-		ImGui::Checkbox("ESP Text", &hack->settings.bText);
+		ImGui::Checkbox("ESP Distance", &hack->settings.bDistanceText);
+		ImGui::Checkbox("ESP Health", &hack->settings.bHealthText);
 
 		// Aim and Fire control options
 		ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Aim & Fire Control Options"); // Green text
@@ -127,8 +128,9 @@ void APIENTRY hkEndScene(LPDIRECT3DDEVICE9 o_pDevice) {
 		headPos3d.x -= 15.9;
 		
 		if (hack->WorldToScreen(curEnt->vecOrigin, entPos2D)) {
-			if(hack->settings.bLine)
+			if (hack->settings.bLine)
 				DrawLine(entPos2D.x, entPos2D.y + 15, windowWidth / 2, windowHeight, 2, color);
+
 		}
 
 		if (hack->WorldToScreen(headPos3d, entHead2D)) {
@@ -157,13 +159,20 @@ void APIENTRY hkEndScene(LPDIRECT3DDEVICE9 o_pDevice) {
 				DrawLine(botHealth, topHealth, 1.7, D3DCOLOR_ARGB(255, 255, 255, 255));
 			}
 		}
-		if (hack->settings.bText) {
+		if (hack->settings.bHealthText) {
 			std::stringstream s1;
 			s1 << curEnt->healthInt;
 			std::string t1 = "HP: " + s1.str();
 			char* healthMSG = (char*)t1.c_str();
-
 			DrawText(healthMSG, entPos2D.x, entPos2D.y , D3DCOLOR_ARGB(255, 255, 255, 255));
+		}
+		if (hack->settings.bDistanceText)
+		{
+			std::stringstream s;
+			s << hack->GetDistance(curEnt->vecOrigin, hack->entList->ents[0].ent->vecOrigin);
+			std::string t = "Distance: " + s.str();
+			char* distanceMSG = (char*)t.c_str();
+			DrawText(distanceMSG, entPos2D.x, entPos2D.y + 15, D3DCOLOR_ARGB(255, 255, 255, 255));
 		}
 	}
 	if (hack->settings.showCross)
